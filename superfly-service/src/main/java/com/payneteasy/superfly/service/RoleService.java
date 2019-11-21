@@ -30,6 +30,8 @@ public interface RoleService {
 
     UIRoleForView getRole(long roleId);
 
+    UIRole getRoleByName(String roleName, Long subsystemId);
+
     RoutineResult updateRole(UIRole role);
 
     RoutineResult createRole(UIRole role);

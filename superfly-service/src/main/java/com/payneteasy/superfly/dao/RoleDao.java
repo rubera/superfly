@@ -13,7 +13,7 @@ import com.payneteasy.superfly.model.ui.role.UIRoleForView;
 
 /**
  * DAO to work with roles.
- * 
+ *
  * @author Roman Puchkovskiy
  */
 public interface RoleDao {
@@ -45,6 +45,9 @@ public interface RoleDao {
 
     @AStoredProcedure(name = "ui_get_role")
     UIRoleForView getRole(long roleId);
+
+    @AStoredProcedure(name = "ui_get_role_by_name_for_subsystem")
+    UIRole getRoleByNameForSubsystem(String roleName, Long subsystemId);
 
     @AStoredProcedure(name = "ui_delete_role")
     RoutineResult deleteRole(long roleId);

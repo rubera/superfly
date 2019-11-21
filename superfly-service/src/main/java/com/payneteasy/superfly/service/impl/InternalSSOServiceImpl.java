@@ -385,14 +385,23 @@ public class InternalSSOServiceImpl implements InternalSSOService {
         UISubsystem subsystem = subsystemService.getSubsystemByName(subsystemIdentifier);
 
         if (subsystem == null) {
-            throw new IllegalStateException("Wrong subsystem id: " + subsystemIdentifier);
+            throw new IllegalStateException("Subsystem with id " + subsystemIdentifier + " does not exist.");
         }
 
-        final UIRole role = new UIRole();
-        role.setSubsystemId(subsystem.getId());
-        role.setRoleName(roleName);
-        role.setPrincipalName(roleName);
+        // Check if role already exists
+        UIRole role = roleService.getRoleByName(roleName, subsystem.getId());
 
-        roleService.createRole(role);
+        if(role == null) {
+            role = new UIRole();
+            role.setSubsystemId(subsystem.getId());
+            role.setRoleName(roleName);
+            role.setPrincipalName(roleName);
+
+            roleService.createRole(role);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Role '" + roleName + "' for subsystem '" + subsystemIdentifier + "' already exists.");
+            }
+        }
     }
 }

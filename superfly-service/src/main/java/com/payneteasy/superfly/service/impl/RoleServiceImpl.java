@@ -75,6 +75,11 @@ public class RoleServiceImpl implements RoleService {
         return roleDao.getRole(roleId);
     }
 
+    @Override
+    public UIRole getRoleByName(String roleName, Long subsystemId) {
+        return roleDao.getRoleByNameForSubsystem(roleName, subsystemId);
+    }
+
     public RoutineResult updateRole(UIRole role) {
         RoutineResult result = roleDao.updateRole(role);
         // notifying as principal could be changed, and actions for users
