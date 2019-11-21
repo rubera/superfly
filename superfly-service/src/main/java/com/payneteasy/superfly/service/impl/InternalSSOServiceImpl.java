@@ -10,6 +10,9 @@ import java.util.Set;
 
 import com.payneteasy.superfly.dao.SessionDao;
 import com.payneteasy.superfly.model.*;
+import com.payneteasy.superfly.model.ui.role.UIRole;
+import com.payneteasy.superfly.model.ui.subsystem.UISubsystem;
+import com.payneteasy.superfly.service.*;
 import com.payneteasy.superfly.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +39,6 @@ import com.payneteasy.superfly.password.SaltSource;
 import com.payneteasy.superfly.policy.impl.AbstractPolicyValidation;
 import com.payneteasy.superfly.policy.password.PasswordCheckContext;
 import com.payneteasy.superfly.register.RegisterUserStrategy;
-import com.payneteasy.superfly.service.InternalSSOService;
-import com.payneteasy.superfly.service.LoggerSink;
-import com.payneteasy.superfly.service.NotificationService;
 import com.payneteasy.superfly.spi.HOTPProvider;
 import com.payneteasy.superfly.spisupport.HOTPService;
 import com.payneteasy.superfly.spisupport.SaltGenerator;
@@ -49,20 +49,22 @@ public class InternalSSOServiceImpl implements InternalSSOService {
 
     private static final Logger logger = LoggerFactory.getLogger(InternalSSOServiceImpl.class);
 
-    private UserDao userDao;
-    private ActionDao actionDao;
-    private SessionDao sessionDao;
-    private NotificationService notificationService;
-    private LoggerSink loggerSink;
-    private PasswordEncoder passwordEncoder;
-    private SaltSource saltSource;
-    private SaltGenerator hotpSaltGenerator;
-    private HOTPProvider hotpProvider;
-    private LockoutStrategy lockoutStrategy;
+    private UserDao              userDao;
+    private ActionDao            actionDao;
+    private SessionDao           sessionDao;
+    private NotificationService  notificationService;
+    private LoggerSink           loggerSink;
+    private PasswordEncoder      passwordEncoder;
+    private SaltSource           saltSource;
+    private SaltGenerator        hotpSaltGenerator;
+    private HOTPProvider         hotpProvider;
+    private LockoutStrategy      lockoutStrategy;
     private RegisterUserStrategy registerUserStrategy;
-    private PublicKeyCrypto publicKeyCrypto;
-    private HOTPService hotpService;
-    private Set<String> notSavedActions = Collections.singleton("action_temp_password");
+    private PublicKeyCrypto      publicKeyCrypto;
+    private HOTPService          hotpService;
+    private RoleService          roleService;
+    private SubsystemService     subsystemService;
+    private Set<String>          notSavedActions = Collections.singleton("action_temp_password");
 
     private AbstractPolicyValidation<PasswordCheckContext> policyValidation;
 
@@ -136,14 +138,24 @@ public class InternalSSOServiceImpl implements InternalSSOService {
         this.hotpService = hotpService;
     }
 
+    @Required
+    public void setRoleService(RoleService roleService) {
+        this.roleService = roleService;
+    }
+
+    @Required
+    public void setSubsystemService(SubsystemService subsystemService) {
+        this.subsystemService = subsystemService;
+    }
+
     public void setNotSavedActions(Set<String> notSavedActions) {
         this.notSavedActions = notSavedActions;
     }
 
     public SSOUser authenticate(String username, String password, String subsystemIdentifier, String userIpAddress,
-            String sessionInfo) {
+                                String sessionInfo) {
         SSOUser ssoUser;
-        String encPassword = passwordEncoder.encode(password, saltSource.getSalt(username));
+        String  encPassword = passwordEncoder.encode(password, saltSource.getSalt(username));
         AuthSession session = userDao.authenticate(username, encPassword,
                 subsystemIdentifier, userIpAddress, sessionInfo);
         boolean ok = session != null && session.getSessionId() != null;
@@ -160,9 +172,9 @@ public class InternalSSOServiceImpl implements InternalSSOService {
 
     @Override
     public SSOUser pseudoAuthenticate(String username, String subsystemIdentifier) {
-        SSOUser ssoUser;
+        SSOUser     ssoUser;
         AuthSession session = userDao.pseudoAuthenticate(username, subsystemIdentifier);
-        boolean ok = session != null && session.getSessionId() != null;
+        boolean     ok      = session != null && session.getSessionId() != null;
         loggerSink.info(logger, "REMOTE_PSEUDO_LOGIN", ok, username);
         if (ok) {
             ssoUser = buildSSOUser(session);
@@ -174,7 +186,7 @@ public class InternalSSOServiceImpl implements InternalSSOService {
     }
 
     private SSOUser buildSSOUser(AuthSession session) {
-        SSOUser ssoUser;
+        SSOUser        ssoUser;
         List<AuthRole> authRoles = session.getRoles();
         if (authRoles.size() == 1 && authRoles.get(0).getRoleName() == null) {
             // actually it's empty
@@ -182,7 +194,7 @@ public class InternalSSOServiceImpl implements InternalSSOService {
         }
         Map<SSORole, SSOAction[]> actionsMap = new HashMap<>(authRoles.size());
         for (AuthRole authRole : authRoles) {
-            SSORole ssoRole = new SSORole(authRole.getRoleName());
+            SSORole     ssoRole = new SSORole(authRole.getRoleName());
             SSOAction[] actions = convertToSSOActions(authRole.getActions());
             actionsMap.put(ssoRole, actions);
         }
@@ -196,7 +208,7 @@ public class InternalSSOServiceImpl implements InternalSSOService {
         SSOAction[] actions = new SSOAction[authActions.size()];
         for (int i = 0; i < authActions.size(); i++) {
             AuthAction authAction = authActions.get(i);
-            SSOAction ssoAction = new SSOAction(authAction.getActionName(), authAction.isLogAction());
+            SSOAction  ssoAction  = new SSOAction(authAction.getActionName(), authAction.isLogAction());
             actions[i] = ssoAction;
         }
         return actions;
@@ -225,7 +237,7 @@ public class InternalSSOServiceImpl implements InternalSSOService {
     }
 
     public List<SSOUserWithActions> getUsersWithActions(String subsystemIdentifier) {
-        List<UserWithActions> users = userDao.getUsersAndActions(subsystemIdentifier);
+        List<UserWithActions>    users  = userDao.getUsersAndActions(subsystemIdentifier);
         List<SSOUserWithActions> result = new ArrayList<>(users.size());
         for (UserWithActions user : users) {
             result.add(convertToSSOUser(user));
@@ -234,8 +246,8 @@ public class InternalSSOServiceImpl implements InternalSSOService {
     }
 
     public void registerUser(String username, String password, String email, String subsystemIdentifier,
-            RoleGrantSpecification[] roleGrants, String name, String surname, String secretQuestion,
-            String secretAnswer, String publicKey,String organization) throws UserExistsException, PolicyValidationException,
+                             RoleGrantSpecification[] roleGrants, String name, String surname, String secretQuestion,
+                             String secretAnswer, String publicKey, String organization) throws UserExistsException, PolicyValidationException,
             BadPublicKeyException, MessageSendException {
 
         UserRegisterRequest registerUser = new UserRegisterRequest();
@@ -330,9 +342,9 @@ public class InternalSSOServiceImpl implements InternalSSOService {
 
     @Override
     public SSOUser exchangeSubsystemToken(String subsystemToken) {
-        SSOUser ssoUser;
+        SSOUser     ssoUser;
         AuthSession session = userDao.exchangeSubsystemToken(subsystemToken);
-        boolean ok = session != null && session.getSessionId() != null;
+        boolean     ok      = session != null && session.getSessionId() != null;
         loggerSink.info(logger, "EXCHANGE_SUBSYSTEM_TOKEN", ok, session != null ? session.getUsername() : "TOKEN: " + subsystemToken);
         if (ok) {
             ssoUser = buildSSOUser(session);
@@ -366,5 +378,21 @@ public class InternalSSOServiceImpl implements InternalSSOService {
         if (!result.isOk()) {
             throw new IllegalStateException(result.getErrorMessage());
         }
+    }
+
+    @Override
+    public void createRole(String roleName, String subsystemIdentifier) {
+        UISubsystem subsystem = subsystemService.getSubsystemByName(subsystemIdentifier);
+
+        if (subsystem == null) {
+            throw new IllegalStateException("Wrong subsystem id: " + subsystemIdentifier);
+        }
+
+        final UIRole role = new UIRole();
+        role.setSubsystemId(subsystem.getId());
+        role.setRoleName(roleName);
+        role.setPrincipalName(roleName);
+
+        roleService.createRole(role);
     }
 }

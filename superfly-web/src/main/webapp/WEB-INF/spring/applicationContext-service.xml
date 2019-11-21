@@ -31,6 +31,8 @@
         <property name="hotpProvider" ref="hotpProvider" />
         <property name="publicKeyCrypto" ref="publicKeyCrypto" />
         <property name="hotpService" ref="hotpService" />
+        <property name="roleService" ref="roleService"/>
+        <property name="subsystemService" ref="subsystemService"/>
     </bean>
 
     <bean id="localSecurityService"
@@ -133,7 +135,7 @@
 
     <bean id="saltGenerator" class="com.payneteasy.superfly.password.SHA256RandomGUIDSaltGenerator">
     </bean>
-    
+
     <bean id="passwordGenerator" class="com.payneteasy.superfly.password.PasswordGeneratorImpl">
         <property name="passwordLength" value="8"/>
     </bean>

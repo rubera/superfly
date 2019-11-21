@@ -15,7 +15,7 @@ import com.payneteasy.superfly.model.ui.user.UserForDescription;
 
 /**
  * Internal service used to implement SSOService.
- * 
+ *
  * @author Roman Puchkovskiy
  */
 public interface InternalSSOService {
@@ -106,7 +106,7 @@ public interface InternalSSOService {
     boolean authenticateHOTP(String subsystemIdentifier, String username, String hotp);
 
     /**
-     * 
+     *
      * @param userName user name
      * @param password password
      */
@@ -114,7 +114,7 @@ public interface InternalSSOService {
 
     /**
      * Returns a user description.
-     * 
+     *
      * @param username    username
      * @return description
      */
@@ -171,4 +171,12 @@ public interface InternalSSOService {
      *                              are mentioned
      */
     void changeUserRole(String username, String newRole, String subsystemIdentifier);
+
+    /**
+     * Create new role.
+     *
+     * @param roleName              name of the role to create
+     * @param subsystemIdentifier   identifier of the subsystem in which the role should be created
+     */
+    void createRole(String roleName, String subsystemIdentifier);
 }

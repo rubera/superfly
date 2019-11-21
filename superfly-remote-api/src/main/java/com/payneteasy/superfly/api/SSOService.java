@@ -248,4 +248,12 @@ public interface SSOService {
      * @param subsystemHint hint to determine the affected subsystem
      */
     void changeUserRole(String username, String newRole, String subsystemHint);
+
+    /**
+     * Create new role.
+     *
+     * @param roleName      name of the role to create
+     * @param subsystemHint hint to determine the affected subsystem
+     */
+    void createRole(String roleName, String subsystemHint);
 }

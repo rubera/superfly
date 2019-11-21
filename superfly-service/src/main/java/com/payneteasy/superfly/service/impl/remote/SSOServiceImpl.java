@@ -331,4 +331,8 @@ public class SSOServiceImpl implements SSOService {
         internalSSOService.changeUserRole(username, newRole, obtainSubsystemIdentifier(subsystemHint));
     }
 
+    @Override
+    public void createRole(String roleName, String subsystemHint) {
+        internalSSOService.createRole(roleName, obtainSubsystemIdentifier(subsystemHint));
+    }
 }
