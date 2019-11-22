@@ -179,4 +179,13 @@ public interface InternalSSOService {
      * @param subsystemIdentifier   identifier of the subsystem in which the role should be created
      */
     void createRole(String roleName, String subsystemIdentifier);
+
+    /**
+     * Map actions to a role. All previously mapped actions will be unmapped.
+     *
+     * @param actions               actions list to map to a role
+     * @param roleName              name of the existing role
+     * @param subsystemIdentifier   identifier of the subsystem in which the role and actions exist
+     */
+    void mapActionsToRole(List<String> actions, String roleName, String subsystemIdentifier);
 }

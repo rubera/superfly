@@ -202,6 +202,8 @@ create table mysql_routines_return_arguments (
 
 \. ui_get/ui_get_action.prc
 
+\. ui_get/ui_get_action_by_name_for_subsystem.prc
+
 \. ui_get/ui_get_subsystem.prc
 
 \. ui_get/ui_get_role.prc

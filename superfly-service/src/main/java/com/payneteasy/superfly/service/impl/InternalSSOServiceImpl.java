@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.payneteasy.superfly.dao.RoleDao;
 import com.payneteasy.superfly.dao.SessionDao;
 import com.payneteasy.superfly.model.*;
+import com.payneteasy.superfly.model.ui.action.UIAction;
+import com.payneteasy.superfly.model.ui.action.UIActionForCheckboxForRole;
 import com.payneteasy.superfly.model.ui.role.UIRole;
 import com.payneteasy.superfly.model.ui.subsystem.UISubsystem;
 import com.payneteasy.superfly.service.*;
@@ -382,16 +385,12 @@ public class InternalSSOServiceImpl implements InternalSSOService {
 
     @Override
     public void createRole(String roleName, String subsystemIdentifier) {
-        UISubsystem subsystem = subsystemService.getSubsystemByName(subsystemIdentifier);
-
-        if (subsystem == null) {
-            throw new IllegalStateException("Subsystem with id " + subsystemIdentifier + " does not exist.");
-        }
+        UISubsystem subsystem = getSubsystem(subsystemIdentifier);
 
         // Check if role already exists
         UIRole role = roleService.getRoleByName(roleName, subsystem.getId());
 
-        if(role == null) {
+        if (role == null) {
             role = new UIRole();
             role.setSubsystemId(subsystem.getId());
             role.setRoleName(roleName);
@@ -403,5 +402,54 @@ public class InternalSSOServiceImpl implements InternalSSOService {
                 logger.debug("Role '" + roleName + "' for subsystem '" + subsystemIdentifier + "' already exists.");
             }
         }
+    }
+
+    @Override
+    public void mapActionsToRole(List<String> actions, String roleName, String subsystemIdentifier) {
+        UISubsystem subsystem = getSubsystem(subsystemIdentifier);
+
+        // Check if role exists
+        UIRole role = roleService.getRoleByName(roleName, subsystem.getId());
+        if (role == null) {
+            throw new IllegalStateException("Role " + roleName + " does not exist.");
+        }
+
+        List<UIActionForCheckboxForRole> mappedActions = roleService.getMappedRoleActions(0, 1000, 1, true, role.getRoleId(), null);
+        List<Long> actionToAddIds = new ArrayList<>();
+        List<Long> actionToRemoveIds = new ArrayList<>();
+
+        for (UIActionForCheckboxForRole mappedAction : mappedActions) {
+            if (!actions.contains(mappedAction.getActionName())) {
+                // Have to unmap
+                actionToRemoveIds.add(mappedAction.getActionId());
+            } else {
+                // Action already mapped earlier. No need to map it later again.
+                actions.remove(mappedAction.getActionName());
+            }
+        }
+
+        for (String action : actions) {
+            UIAction act = actionDao.getActionByNameForSubsystem(action, subsystem.getId());
+            if(act != null) {
+                actionToAddIds.add(act.getActionId());
+            }
+        }
+
+        roleService.changeRoleActions(role.getRoleId(), actionToAddIds, actionToRemoveIds);
+    }
+
+    /**
+     * @param subsystemIdentifier Subsystem ID
+     * @return UISubsystem
+     * @throws IllegalStateException when subsystem not found
+     */
+    private UISubsystem getSubsystem(String subsystemIdentifier) {
+        UISubsystem subsystem = subsystemService.getSubsystemByName(subsystemIdentifier);
+
+        if (subsystem == null) {
+            throw new IllegalStateException("Subsystem with id " + subsystemIdentifier + " does not exist.");
+        }
+
+        return subsystem;
     }
 }

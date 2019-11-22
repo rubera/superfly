@@ -256,4 +256,13 @@ public interface SSOService {
      * @param subsystemHint hint to determine the affected subsystem
      */
     void createRole(String roleName, String subsystemHint);
+
+    /**
+     * Map actions to a role. All previously mapped actions will be unmapped.
+     *
+     * @param actions       actions list to map to a role
+     * @param roleName      name of the existing role
+     * @param subsystemHint hint to determine the affected subsystem
+     */
+    void grantActionsToRole(List<String> actions, String roleName, String subsystemHint);
 }

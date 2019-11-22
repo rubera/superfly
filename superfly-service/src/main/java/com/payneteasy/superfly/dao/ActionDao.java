@@ -11,7 +11,7 @@ import com.payneteasy.superfly.model.ui.action.UIActionForList;
 
 /**
  * DAO to work with actions through jdbc-proc.
- * 
+ *
  * @author Roman Puchkovskiy
  */
 public interface ActionDao {
@@ -52,4 +52,7 @@ public interface ActionDao {
 
     @AStoredProcedure(name = "ui_get_action")
     UIAction getAction(long actionId);
+
+    @AStoredProcedure(name = "ui_get_action_by_name_for_subsystem")
+    UIAction getActionByNameForSubsystem(String actionName, Long subsystemId);
 }
