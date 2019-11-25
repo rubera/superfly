@@ -340,4 +340,9 @@ public class SSOServiceImpl implements SSOService {
     public void grantActionsToRole(List<String> actions, String roleName, String subsystemHint) {
         internalSSOService.mapActionsToRole(actions, roleName, obtainSubsystemIdentifier(subsystemHint));
     }
+
+    @Override
+    public String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl) {
+        return internalSSOService.createSubsystem(subsystemTitle, subsystemUrl, callbackUrl, landingUrl);
+    }
 }

@@ -265,4 +265,14 @@ public interface SSOService {
      * @param subsystemHint hint to determine the affected subsystem
      */
     void grantActionsToRole(List<String> actions, String roleName, String subsystemHint);
+
+    /**
+     * Creates new subsystem
+     *
+     * @param subsystemTitle  Subsystem title
+     * @param subsystemUrl    Subsystem url
+     * @param callbackUrl     Callback url
+     * @param landingUrl      Landing url
+     */
+    String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl);
 }

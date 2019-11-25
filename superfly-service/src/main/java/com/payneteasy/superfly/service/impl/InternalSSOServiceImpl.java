@@ -438,6 +438,27 @@ public class InternalSSOServiceImpl implements InternalSSOService {
         roleService.changeRoleActions(role.getRoleId(), actionToAddIds, actionToRemoveIds);
     }
 
+    @Override
+    public String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl) {
+        String token = subsystemService.generateMainSubsystemToken();
+
+        subsystemTitle = subsystemTitle.replaceAll("[^a-zA-Z0-9.-]", "");
+        String subsystemName = subsystemTitle.toLowerCase().replaceAll("[. ]", "-");
+
+        UISubsystem subsystem = new UISubsystem();
+        subsystem.setTitle(subsystemTitle);
+        subsystem.setName(subsystemName);
+        subsystem.setCallbackUrl(callbackUrl);
+        subsystem.setSendCallbacks(true);
+        subsystem.setSubsystemUrl(subsystemUrl);
+        subsystem.setSubsystemToken(token);
+        subsystem.setLandingUrl(landingUrl);
+
+        subsystemService.createSubsystem(subsystem);
+
+        return token;
+    }
+
     /**
      * @param subsystemIdentifier Subsystem ID
      * @return UISubsystem

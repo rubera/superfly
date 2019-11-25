@@ -188,4 +188,14 @@ public interface InternalSSOService {
      * @param subsystemIdentifier   identifier of the subsystem in which the role and actions exist
      */
     void mapActionsToRole(List<String> actions, String roleName, String subsystemIdentifier);
+
+    /**
+     * Creates new subsystem
+     *
+     * @param subsystemTitle  Subsystem title
+     * @param subsystemUrl    Subsystem url
+     * @param callbackUrl     Callback url
+     * @param landingUrl      Landing url
+     */
+    String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl);
 }
