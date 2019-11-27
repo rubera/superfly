@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.payneteasy.superfly.dao.RoleDao;
+import com.payneteasy.superfly.api.*;
 import com.payneteasy.superfly.dao.SessionDao;
 import com.payneteasy.superfly.model.*;
+import com.payneteasy.superfly.model.UserRegisterRequest;
 import com.payneteasy.superfly.model.ui.action.UIAction;
 import com.payneteasy.superfly.model.ui.action.UIActionForCheckboxForRole;
 import com.payneteasy.superfly.model.ui.role.UIRole;
@@ -22,16 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.payneteasy.superfly.api.ActionDescription;
-import com.payneteasy.superfly.api.BadPublicKeyException;
-import com.payneteasy.superfly.api.MessageSendException;
-import com.payneteasy.superfly.api.PolicyValidationException;
-import com.payneteasy.superfly.api.RoleGrantSpecification;
-import com.payneteasy.superfly.api.SSOAction;
-import com.payneteasy.superfly.api.SSORole;
-import com.payneteasy.superfly.api.SSOUser;
-import com.payneteasy.superfly.api.SSOUserWithActions;
-import com.payneteasy.superfly.api.UserExistsException;
 import com.payneteasy.superfly.crypto.PublicKeyCrypto;
 import com.payneteasy.superfly.dao.ActionDao;
 import com.payneteasy.superfly.dao.UserDao;
@@ -414,9 +405,9 @@ public class InternalSSOServiceImpl implements InternalSSOService {
             throw new IllegalStateException("Role " + roleName + " does not exist.");
         }
 
-        List<UIActionForCheckboxForRole> mappedActions = roleService.getMappedRoleActions(0, 1000, 1, true, role.getRoleId(), null);
-        List<Long> actionToAddIds = new ArrayList<>();
-        List<Long> actionToRemoveIds = new ArrayList<>();
+        List<UIActionForCheckboxForRole> mappedActions     = roleService.getMappedRoleActions(0, 1000, 1, true, role.getRoleId(), null);
+        List<Long>                       actionToAddIds    = new ArrayList<>();
+        List<Long>                       actionToRemoveIds = new ArrayList<>();
 
         for (UIActionForCheckboxForRole mappedAction : mappedActions) {
             if (!actions.contains(mappedAction.getActionName())) {
@@ -430,7 +421,7 @@ public class InternalSSOServiceImpl implements InternalSSOService {
 
         for (String action : actions) {
             UIAction act = actionDao.getActionByNameForSubsystem(action, subsystem.getId());
-            if(act != null) {
+            if (act != null) {
                 actionToAddIds.add(act.getActionId());
             }
         }
@@ -439,11 +430,22 @@ public class InternalSSOServiceImpl implements InternalSSOService {
     }
 
     @Override
-    public String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl) {
+    public SubsystemCreateResponse createSubsystem(String subsystemName, String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl) throws SubsystemCreateException {
         String token = subsystemService.generateMainSubsystemToken();
 
         subsystemTitle = subsystemTitle.replaceAll("[^a-zA-Z0-9.-]", "");
-        String subsystemName = subsystemTitle.toLowerCase().replaceAll("[. ]", "-");
+        subsystemName = subsystemName.replaceAll("[. ]", "-");
+        subsystemName = subsystemName.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "");
+
+        if (subsystemName.length() > 32) {
+            throw new SubsystemCreateException("Subsystem name '" + subsystemName + "' is too long. Maximum allowed: 32 symbols.");
+        }
+
+        // Checking Duplicate entry
+        UISubsystem existingSubsystem = subsystemService.getSubsystemByName(subsystemName);
+        if (existingSubsystem != null) {
+            throw new SubsystemCreateException("Subsystem '" + subsystemName + "' already exists!");
+        }
 
         UISubsystem subsystem = new UISubsystem();
         subsystem.setTitle(subsystemTitle);
@@ -456,7 +458,7 @@ public class InternalSSOServiceImpl implements InternalSSOService {
 
         subsystemService.createSubsystem(subsystem);
 
-        return token;
+        return new SubsystemCreateResponse(subsystemName, token);
     }
 
     /**

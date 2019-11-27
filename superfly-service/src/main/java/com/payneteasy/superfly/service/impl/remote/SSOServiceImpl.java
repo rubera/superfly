@@ -1,20 +1,6 @@
 package com.payneteasy.superfly.service.impl.remote;
 
-import com.payneteasy.superfly.api.ActionDescription;
-import com.payneteasy.superfly.api.AuthenticationRequestInfo;
-import com.payneteasy.superfly.api.BadPublicKeyException;
-import com.payneteasy.superfly.api.MessageSendException;
-import com.payneteasy.superfly.api.PasswordReset;
-import com.payneteasy.superfly.api.PolicyValidationException;
-import com.payneteasy.superfly.api.RoleGrantSpecification;
-import com.payneteasy.superfly.api.SSOService;
-import com.payneteasy.superfly.api.SSOUser;
-import com.payneteasy.superfly.api.SSOUserWithActions;
-import com.payneteasy.superfly.api.UserDescription;
-import com.payneteasy.superfly.api.UserExistsException;
-import com.payneteasy.superfly.api.UserNotFoundException;
-import com.payneteasy.superfly.api.UserRegisterRequest;
-import com.payneteasy.superfly.api.UserStatus;
+import com.payneteasy.superfly.api.*;
 import com.payneteasy.superfly.crypto.PublicKeyCrypto;
 import com.payneteasy.superfly.email.EmailService;
 import com.payneteasy.superfly.model.UserWithStatus;
@@ -39,12 +25,12 @@ import java.util.List;
  */
 public class SSOServiceImpl implements SSOService {
 
-    private InternalSSOService internalSSOService;
-    private HOTPService hotpService;
-    private ResetPasswordStrategy resetPasswordStrategy;
+    private InternalSSOService          internalSSOService;
+    private HOTPService                 hotpService;
+    private ResetPasswordStrategy       resetPasswordStrategy;
     private SubsystemIdentifierObtainer subsystemIdentifierObtainer = new AuthRequestInfoObtainer();
-    private EmailService emailService;
-    private PublicKeyCrypto publicKeyCrypto;
+    private EmailService                emailService;
+    private PublicKeyCrypto             publicKeyCrypto;
 
     @Required
     public void setInternalSSOService(InternalSSOService internalSSOService) {
@@ -81,7 +67,7 @@ public class SSOServiceImpl implements SSOService {
      */
     @Override
     public SSOUser authenticate(String username, String password,
-            AuthenticationRequestInfo authRequestInfo) {
+                                AuthenticationRequestInfo authRequestInfo) {
         return internalSSOService.authenticate(username, password,
                 obtainSubsystemIdentifier(authRequestInfo.getSubsystemIdentifier()),
                 authRequestInfo.getIpAddress(),
@@ -101,7 +87,7 @@ public class SSOServiceImpl implements SSOService {
      */
     @Override
     public void sendSystemData(String systemIdentifier,
-            ActionDescription[] actionDescriptions) {
+                               ActionDescription[] actionDescriptions) {
         internalSSOService.saveSystemData(obtainSubsystemIdentifier(systemIdentifier),
                 actionDescriptions);
     }
@@ -123,9 +109,9 @@ public class SSOServiceImpl implements SSOService {
     @Override
     @Deprecated
     public void registerUser(String username, String password, String email,
-            String subsystemIdentifier, RoleGrantSpecification[] roleGrants,
-            String name, String surname, String secretQuestion, String secretAnswer,
-            String publicKey, String organization)
+                             String subsystemIdentifier, RoleGrantSpecification[] roleGrants,
+                             String name, String surname, String secretQuestion, String secretAnswer,
+                             String publicKey, String organization)
             throws UserExistsException, PolicyValidationException, BadPublicKeyException, MessageSendException {
         internalSSOService.registerUser(username, password, email,
                 obtainSubsystemIdentifier(subsystemIdentifier), roleGrants,
@@ -174,7 +160,7 @@ public class SSOServiceImpl implements SSOService {
      */
     @Override
     public UserDescription getUserDescription(String username) {
-        UserDescription result;
+        UserDescription    result;
         UserForDescription user = internalSSOService.getUserDescription(username);
         if (user == null) {
             result = null;
@@ -205,7 +191,7 @@ public class SSOServiceImpl implements SSOService {
      */
     @Override
     public void resetAndSendOTPTable(String subsystemIdentifier,
-            String username) throws UserNotFoundException, MessageSendException {
+                                     String username) throws UserNotFoundException, MessageSendException {
         UserForDescription user = internalSSOService.getUserDescription(username);
         if (user == null) {
             throw new UserNotFoundException(username);
@@ -243,7 +229,7 @@ public class SSOServiceImpl implements SSOService {
     }
 
     private void doResetPassword(String username, String newPassword,
-            boolean sendPasswordByEmail) throws UserNotFoundException {
+                                 boolean sendPasswordByEmail) throws UserNotFoundException {
         UserForDescription user = internalSSOService.getUserDescription(username);
         if (user == null) {
             throw new UserNotFoundException(username);
@@ -255,9 +241,9 @@ public class SSOServiceImpl implements SSOService {
             // using Superfly UI and other means, but it's not clear
             // how to get SMTP server when subsystem is not known
             // This is to be resolved later
-            String subsystemIdentifier = obtainSubsystemIdentifier(null); // TODO: take default from API?
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            final String fileName = "password.txt";
+            String                subsystemIdentifier = obtainSubsystemIdentifier(null); // TODO: take default from API?
+            ByteArrayOutputStream baos                = new ByteArrayOutputStream();
+            final String          fileName            = "password.txt";
             try {
                 publicKeyCrypto.encrypt(getStringBytes(newPassword), fileName, user.getPublicKey(), baos);
             } catch (IOException e) {
@@ -342,7 +328,13 @@ public class SSOServiceImpl implements SSOService {
     }
 
     @Override
-    public String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl) {
-        return internalSSOService.createSubsystem(subsystemTitle, subsystemUrl, callbackUrl, landingUrl);
+    public SubsystemCreateResponse createSubsystem(SubsystemRegisterRequest registerRequest) throws SubsystemCreateException {
+        return internalSSOService.createSubsystem(
+                registerRequest.getSubsystemName(),
+                registerRequest.getSubsystemTitle(),
+                registerRequest.getSubsystemUrl(),
+                registerRequest.getCallbackUrl(),
+                registerRequest.getLandingUrl()
+        );
     }
 }

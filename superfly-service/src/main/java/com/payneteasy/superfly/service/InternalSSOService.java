@@ -2,14 +2,7 @@ package com.payneteasy.superfly.service;
 
 import java.util.List;
 
-import com.payneteasy.superfly.api.ActionDescription;
-import com.payneteasy.superfly.api.BadPublicKeyException;
-import com.payneteasy.superfly.api.MessageSendException;
-import com.payneteasy.superfly.api.PolicyValidationException;
-import com.payneteasy.superfly.api.RoleGrantSpecification;
-import com.payneteasy.superfly.api.SSOUser;
-import com.payneteasy.superfly.api.SSOUserWithActions;
-import com.payneteasy.superfly.api.UserExistsException;
+import com.payneteasy.superfly.api.*;
 import com.payneteasy.superfly.model.UserWithStatus;
 import com.payneteasy.superfly.model.ui.user.UserForDescription;
 
@@ -192,10 +185,15 @@ public interface InternalSSOService {
     /**
      * Creates new subsystem
      *
-     * @param subsystemTitle  Subsystem title
-     * @param subsystemUrl    Subsystem url
-     * @param callbackUrl     Callback url
-     * @param landingUrl      Landing url
+     * @param subsystemName               Subsystem name (max: 32 symbols)
+     * @param subsystemTitle              Subsystem title
+     * @param subsystemUrl                Subsystem url
+     * @param callbackUrl                 Callback url
+     * @param landingUrl                  Landing url
+     * @throws SubsystemCreateException   when subsystem already exists
+     * @return SubsystemCreateResponse    create response containing filtered subsystem name
+     *                                    and generated subsystem token
      */
-    String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl);
+    SubsystemCreateResponse createSubsystem(String subsystemName, String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl)
+            throws SubsystemCreateException;
 }

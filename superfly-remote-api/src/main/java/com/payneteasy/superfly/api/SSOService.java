@@ -269,10 +269,11 @@ public interface SSOService {
     /**
      * Creates new subsystem
      *
-     * @param subsystemTitle  Subsystem title
-     * @param subsystemUrl    Subsystem url
-     * @param callbackUrl     Callback url
-     * @param landingUrl      Landing url
+     * @param registerRequest             Request containing all data for a new Subsystem
+     * @throws SubsystemCreateException   when subsystem with given name already exists
+     *                                    or subsystem name is too long
+     * @return SubsystemCreateResponse    create response containing filtered subsystem name
+     *                                    and generated subsystem token
      */
-    String createSubsystem(String subsystemTitle, String subsystemUrl, String callbackUrl, String landingUrl);
+    SubsystemCreateResponse createSubsystem(SubsystemRegisterRequest registerRequest) throws SubsystemCreateException;
 }
