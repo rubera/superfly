@@ -72,36 +72,6 @@ public interface SSOService {
      * is destroyed. To complete a user, call #completeUser() method.
      * Also, user is completed when he logs in.
      *
-     * @param username      name of the user
-     * @param password      password of the user
-     * @param email         email of the user
-     * @param subsystemHint hint to the identifier of a subsystem from which roles will be
-     *                      taken
-     * @param roleGrants    which roles to grant
-     * @throws UserExistsException       if user with such a name already exists
-     * @throws PolicyValidationException
-     * @throws BadPublicKeyException
-     * @throws MessageSendException
-     * @see RoleGrantSpecification
-     * @see #completeUser(String)
-     * @deprecated in favor of {@link #registerUser(UserRegisterRequest)}
-     * @since 1.1
-     */
-    @Deprecated
-    void registerUser(String username, String password, String email, String subsystemHint,
-            RoleGrantSpecification[] roleGrants,
-            String name, String surname, String secretQuestion, String secretAnswer,
-            String publicKey, String organization)
-            throws UserExistsException, PolicyValidationException,
-            BadPublicKeyException, MessageSendException;
-
-    /**
-     * Registers user and gives him requested principal.
-     * User is created in incomplete state. In that state, if
-     * a registration with the same username is made, existing user
-     * is destroyed. To complete a user, call #completeUser() method.
-     * Also, user is completed when he logs in.
-     *
      * @param registerRequest register request containing all the
      *                        data needed to register a user
      * @throws UserExistsException       if user with such a name already exists

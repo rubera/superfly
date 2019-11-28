@@ -103,22 +103,6 @@ public class SSOServiceImpl implements SSOService {
     }
 
     /**
-     * @see SSOService#registerUser(String, String, String, String, com.payneteasy.superfly.api.RoleGrantSpecification[], String, String, String, String, String, String)
-     * @deprecated use #registerUser(UserRegisterRequest) instead
-     */
-    @Override
-    @Deprecated
-    public void registerUser(String username, String password, String email,
-                             String subsystemIdentifier, RoleGrantSpecification[] roleGrants,
-                             String name, String surname, String secretQuestion, String secretAnswer,
-                             String publicKey, String organization)
-            throws UserExistsException, PolicyValidationException, BadPublicKeyException, MessageSendException {
-        internalSSOService.registerUser(username, password, email,
-                obtainSubsystemIdentifier(subsystemIdentifier), roleGrants,
-                name, surname, secretQuestion, secretAnswer, publicKey, organization);
-    }
-
-    /**
      * @see SSOService#registerUser(com.payneteasy.superfly.api.UserRegisterRequest)
      */
     @Override
